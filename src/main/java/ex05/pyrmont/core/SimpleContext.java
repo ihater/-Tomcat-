@@ -40,6 +40,40 @@ import org.apache.catalina.util.CharsetMapper;
  * 重要方法：addWrapper()和createWrapper() 在12章讨论。
  * 
  * 敲黑板！！！！！开始讲解，Context，Mapper，
+ * 
+ * StandardContext的配置：
+	 * 常见StandardContext实例后，必须调用start() 方法来为引入的每个HTTP请求提供服务
+	 * 但是，StandardContext对象可能会启动失败，这时的available属性就为 false
+	 * 
+	 * 若要正确执行start() 方法，就要配置StandContext，正确设置后，StandardContext才能
+	 * 正确地解析到默认的web.xml 文件（这是第12章，第15章还会讲到StandardContext的配置）
+	 * 
+	 * Context的启动：当调用StandardContext实例的start() 方法时，马上就会触发
+		 * 一个生命周期事件，该事件调用监听器，对StandardContext进行配置。
+		 * 配置成功，configured属性九尾true，就可以为HTTP提供服务
+		 * 
+		 * Context的start() 需要完成以下工作：
+		 * 触发BEFORE_START 事件
+		 * 将availabity属性设置为flase，将configured属性设置为false（因为还没start成功）
+		 * 配置资源，设置载入器
+		 * 配置session管理器，初始化字符集映射器
+		 * 启动与该Context容器相关的组件：
+		 * 启动子容器，启动管道对象，启动session管理器
+		 * 触发START事件，在监听器（ContextConfig实例）会执行一些配租操作（见15章）
+		 * 设置成功，ContextConfig会将StandardContext的configured变量设置为true
+		 * 
+		 * 检查configured属性，为true就调用postWelcomePage()方法，载入那些需要在
+		 * 启动时就载入子容器（即Wrapper实例），将availability属性设置为true（为false就 stop）
+		 * 触发AFTER_START事件
+ * 
+ * StandardContextMapper：
+ * 对于每个传入的HTTP请求，都会调用StandardContext实例的管道对象的基础阀的invoke()方法
+ * StandardContext实例的基础阀是StandardContextValve类的实例
+ * StandContextValve类的invoke() 方法要做的第一件事就是获取要哦处理的HTTP请求Wrapper实例
+ * StandardContextValve实例在它包含的StandardContext中查找
+ * StandardContext实例的映射器找到一个合适的Wrapper实例，获得Wrapper实例后，
+ * 就会调用Wrapper实例的 invoke() 方法。
+ * 
  */
 public class SimpleContext implements Context, Pipeline {
 
